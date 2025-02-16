@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+psycopg2-binary
+python-dotenv
+requests
+beautifulsoup4
+bcrypt
+pyjwt
+pandas
+python-multipart
