@@ -13,36 +13,41 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.CLOUD_DATABASE_URL }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r url_scraper/requirements.txt
 
-    - name: Build Docker image
-      run: docker build . -t url_scraper
+      - name: Run tests
+        run: |
+          # Add your test command here
+          pytest
 
-    - name: Log in to Docker Hub
-      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Build Docker image
+        run: docker build . -t ${{ secrets.DOCKER_USERNAME }}/url_scraper:latest
 
-    - name: Push Docker image
-      run: docker push ${{ secrets.DOCKER_USERNAME }}/url_scraper:latest
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-    - name: Deploy to server
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-          docker pull ${{ secrets.DOCKER_USERNAME }}/url_scraper:latest
-          docker stop url_scraper || true
-          docker rm url_scraper || true
-          docker run -d -p 8000:8000 --name url_scraper --env-file .env ${{ secrets.DOCKER_USERNAME }}/url_scraper:latest
-        EOF
+      - name: Push Docker image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/url_scraper:latest
+
+      - name: Deploy to server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            docker pull ${{ secrets.DOCKER_USERNAME }}/url_scraper:latest
+            docker stop url_scraper || true
+            docker rm url_scraper || true
+            docker run -d -p 8000:8000 --name url_scraper --env-file .env ${{ secrets.DOCKER_USERNAME }}/url_scraper:latest
+          EOF
