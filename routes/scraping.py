@@ -11,14 +11,9 @@ router = APIRouter()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
-import httpx
-from bs4 import BeautifulSoup
-
-async def scrape_metadata(url):
+def scrape_metadata(url):
     try:
-        async with httpx.AsyncClient(timeout=5) as client:
-            response = await client.get(url)
-        
+        response = requests.get(url, timeout=5)
         if response.status_code != 200:
             return None
 
@@ -33,10 +28,8 @@ async def scrape_metadata(url):
             "description": description["content"] if description else "No Description",
             "keywords": keywords["content"] if keywords else "No Keywords"
         }
-    except Exception as e:
-        print(f"Error scraping {url}: {e}")
+    except:
         return None
-
 
 @router.post("/upload-csv/")
 async def upload_csv(file: UploadFile = File(...), token: str = Depends(oauth2_scheme)):
@@ -49,14 +42,11 @@ async def upload_csv(file: UploadFile = File(...), token: str = Depends(oauth2_s
 
     conn = get_db_connection()
     cur = conn.cursor()
-    print(df["url"])
     for url in df["url"]:
-        print("url---->", url)
         metadata = scrape_metadata(url)
-        print(metadata)
         if metadata:
             cur.execute(
-                "INSERT INTO scraped_data (user_id, url, title, description, keywords) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (url) DO NOTHING;",
+                "INSERT INTO scraped_data (user_id, url, title, description, keywords) VALUES (%s, %s, %s, %s, %s);",
                 (user_data["user_id"], metadata["url"], metadata["title"], metadata["description"], metadata["keywords"])
             )
 

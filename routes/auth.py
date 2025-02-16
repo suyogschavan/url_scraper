@@ -59,15 +59,7 @@ def login_user(user: UserLogin):
     
     return {"message": "Login successful", "token": create_token(user_data["id"])}
 
-@router.get("/dev/test")
-def testing():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM users;")
-    users = cur.fetchall()
-    cur.close()
-    conn.close()
-    return users
+
 
 def authenticate_user(username: str, password: str):
     conn = get_db_connection()
