@@ -8,3 +8,5 @@ bcrypt
 pyjwt
 pandas
 python-multipart
+celery
+redis
