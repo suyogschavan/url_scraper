@@ -46,4 +46,4 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          railway up --service fastapi
+          railway up --service url-scraper-assign
