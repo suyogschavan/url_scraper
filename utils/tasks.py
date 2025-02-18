@@ -6,12 +6,13 @@ from urllib.parse import urlparse
 from db.connection import get_db_connection
 from dotenv import load_dotenv
 import os
+from utils.celery_worker import celery_app
 
 load_dotenv()
 
-celery = Celery(__name__, broker=os.getenv("REDIS_URL"))
+# celery = Celery(__name__, broker=os.getenv("REDIS_URL"))
 
-@celery.task(bind=True)
+@celery_app.task(bind=True)
 def scrape_urls(self, urls, user_id):
     conn = get_db_connection()
     cur = conn.cursor()
