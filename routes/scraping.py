@@ -5,13 +5,13 @@ from db.connection import get_db_connection
 from utils.auth_utils import decode_token
 from fastapi.security import OAuth2PasswordBearer
 from utils.celery_worker import celery_app
-
+from utils.tasks import test_celery
 
 router = APIRouter()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
-@router.post("/upload")
+@router.post("/upload-csv/")
 async def upload_csv(file: UploadFile = File(...), token: str = Depends(oauth2_scheme)):
     user_data = decode_token(token)
     if not user_data:
@@ -35,7 +35,7 @@ async def upload_csv(file: UploadFile = File(...), token: str = Depends(oauth2_s
     except Exception as e:
         return {"Error : ", e}
 
-@router.get("/status/{task_id}")
+@router.get("/task-status/{task_id}")
 def get_task_status(task_id: str):
     task = celery_app.AsyncResult(task_id)
     if task.state == 'PENDING':
@@ -51,12 +51,11 @@ def get_task_status(task_id: str):
     else:
         response = {
             'state': task.state,
-            'error': str(task.info), 
+            'error': str(task.info),  # this will be the exception raised
         }
     return response
 
-
-@router.get("results/{task_id}")
-def get_task_results(task_id: str):
-    data = celery_app.AsyncResult(task_id)
-    return {"taskInfo": data.result}
+@router.get("/test-celery")
+def test_celery_endpoint():
+    task = test_celery.delay()
+    return {"task_id": task.id}
