@@ -9,7 +9,7 @@ import os
 
 app = FastAPI(title="URL Metadata Scraper", description="Upload CSV & Scrape URLs Metadata")
 
-redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+redis_url = os.getenv('REDIS_URL')
 redis_client = redis.Redis.from_url(redis_url)
 
 # Initialize database tables

@@ -5,7 +5,8 @@ import os
 load_dotenv()
 
 # Load environment variables
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+REDIS_URL = os.getenv("REDIS_URL")
+# REDIS_URL = "redis://default:boNKq12QB2dnyZ6Y34RrL0u7t8s7ACu0@redis-19889.c322.us-east-1-2.ec2.redns.redis-cloud.com:19889"
 
 celery_app = Celery('tasks', broker=REDIS_URL, backend=REDIS_URL)
 celery_app.conf.update(
