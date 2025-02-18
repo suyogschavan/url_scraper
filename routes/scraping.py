@@ -5,6 +5,7 @@ from db.connection import get_db_connection
 from utils.auth_utils import decode_token
 from fastapi.security import OAuth2PasswordBearer
 from utils.celery_worker import celery_app
+from utils.tasks import test_celery
 
 router = APIRouter()
 
@@ -22,11 +23,17 @@ async def upload_csv(file: UploadFile = File(...), token: str = Depends(oauth2_s
     li = df.to_dict(orient='records'), user_data["user_id"]
     data = li[0]
     urls = []
+    print(celery_app.control.ping())
     for i in data:
         urls.append(i["url"])
     print(urls)
-    task = celery_app.send_task('utils.tasks.scrape_urls', args=[urls, user_data["user_id"]])
-    return {"task_id": task.id}
+    try:
+        if not celery_app.control.ping():
+            raise HTTPException(status_code=500, detail="Cannot connect to Celery or Redis")
+        task = celery_app.send_task('utils.tasks.scrape_urls', args=[urls, user_data["user_id"]])
+        return {"task_id": task.id}
+    except Exception as e:
+        return {"Error : ", e}
 
 @router.get("/task-status/{task_id}")
 def get_task_status(task_id: str):
@@ -47,3 +54,8 @@ def get_task_status(task_id: str):
             'error': str(task.info),  # this will be the exception raised
         }
     return response
+
+@router.get("/test-celery")
+def test_celery_endpoint():
+    task = test_celery.delay()
+    return {"task_id": task.id}

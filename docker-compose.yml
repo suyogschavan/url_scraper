@@ -8,7 +8,7 @@ services:
 
   celery:
     build: .
-    command: celery -A utils.celery_worker.celery_app worker --loglevel=info
+    command: celery -A utils.celery_worker.celery_app worker --loglevel=info -P gevent
     volumes:
       - .:/app
     depends_on:
