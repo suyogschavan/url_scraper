@@ -18,3 +18,4 @@ celery_app.conf.update(
     timezone='UTC',
     enable_utc=False,
 )
+import utils.tasks
