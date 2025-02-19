@@ -1,6 +1,12 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
 
   celery:
     build: .
@@ -8,7 +14,9 @@ services:
     volumes:
       - .:/app
     environment:
-      - REDIS_URL=${REDIS_URL}
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
 
   fastapi:
     build: .
@@ -17,7 +25,11 @@ services:
       - .:/app
     ports:
       - "8000:8000"
-    depends_on:
-      - celery
     environment:
-      - REDIS_URL=${REDIS_URL}
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+      - celery
+
+volumes:
+  redis_data:
