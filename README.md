@@ -22,7 +22,7 @@ cd url-scraper
 ```
 
 ### 2️⃣ Setup Environment Variables
-Create a `.env` file with the following:
+Create a `.env` file with the following:-
 ```
 DATABASE_URL=your_postgresql_cloud_url
 REDIS_URL=your_redis_cloud_url
