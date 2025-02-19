@@ -4,6 +4,7 @@ import os
 
 load_dotenv()
 REDIS_URL = os.getenv("REDIS_URL")
+
 celery_app = Celery(
     'tasks',
     broker=REDIS_URL,
@@ -16,6 +17,7 @@ celery_app.conf.update(
     result_serializer='json',
     timezone='UTC',
     enable_utc=True,
+    worker_concurrency=4,  # Number of concurrent workers
 )
 
-import utils.tasks  
+import utils.tasks  # Ensures tasks are loaded
