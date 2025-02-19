@@ -6,13 +6,13 @@ from dev.devRoutes import router as dev_router
 from routes.user import router as user_router
 import redis
 import os
-from prometheus_fastapi_instrumentator import Instrumentator
+# from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI(title="URL Metadata Scraper", description="Upload CSV & Scrape URLs Metadata")
 
 
 
-Instrumentator().instrument(app).expose(app)
+# Instrumentator().instrument(app).expose(app)
 
 create_user_table()
 create_scraped_table()
