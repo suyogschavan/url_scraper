@@ -7,6 +7,7 @@ def create_scraped_table():
                 CREATE TABLE IF NOT EXISTS scraped_data(
                     id SERIAL PRIMARY KEY,
                     user_id INT NOT NULL,
+                    task_id TEXT,
                     url TEXT UNIQUE,
                     title TEXT,
                     description TEXT,
