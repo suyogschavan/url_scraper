@@ -78,7 +78,8 @@ celery -A utils.celery_worker.celery_app flower
 |--------|----------|-------------|
 | POST | `/upload-csv/` | Upload a CSV file of URLs |
 | GET | `/task-status/{task_id}` | Check scraping task status |
-| GET | `/urls` | View scraped metadata |
+| GET | `/results/{task_id}` | View scraped data from task_id |
+| GET | `/urls` | View scraped metadata of a user |
 
 ---
 
