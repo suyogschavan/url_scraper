@@ -23,10 +23,18 @@ async def upload_csv(file: UploadFile = File(...), token: str = Depends(oauth2_s
         logger.warning("Invalid token")
         raise HTTPException(status_code=401, detail="Invalid token")
 
+    if file.content_type != 'text/csv':
+        logger.warning("Uploaded file is not a CSV")
+        raise HTTPException(status_code=400, detail="Uploaded file must be a CSV")
+
     contents = await file.read()
     df = pd.read_csv(io.StringIO(contents.decode("utf-8")))
-    data = df.to_dict(orient='records')
-    urls = [record["url"] for record in data]
+    df.columns = [col.lower() for col in df.columns]
+    if 'url' not in df.columns:
+        logger.warning("CSV does not contain 'url' column")
+        raise HTTPException(status_code=400, detail="CSV must contain 'url' column")
+
+    urls = df['url'].dropna().tolist()
 
     try:
         if not celery_app.control.ping():
