@@ -8,7 +8,7 @@ def create_scraped_table():
                     id SERIAL PRIMARY KEY,
                     user_id INT NOT NULL,
                     task_id TEXT,
-                    url TEXT UNIQUE,
+                    url TEXT,
                     title TEXT,
                     description TEXT,
                     keywords TEXT,

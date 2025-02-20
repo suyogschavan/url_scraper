@@ -4,8 +4,6 @@ from models.user_model import create_user_table
 from models.scraped_model import create_scraped_table
 from dev.devRoutes import router as dev_router
 from routes.user import router as user_router
-import redis
-import os
 
 app = FastAPI(title="URL Metadata Scraper", description="Upload CSV & Scrape URLs Metadata")
 

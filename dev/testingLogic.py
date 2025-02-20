@@ -20,4 +20,4 @@ def scrape_metadata(url):
     except:
         return None
     
-print(scrape_metadata("https://www.psycopg.org")) # {'url': 'https://www.google.com', 'title': 'Google', 'description': 'No Description', 'keywords': 'No Keywords'}
+print(scrape_metadata("https://www.psycopg.org")) 

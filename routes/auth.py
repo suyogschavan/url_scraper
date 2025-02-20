@@ -47,11 +47,9 @@ class Token(BaseModel):
 
 @router.post("/register")
 def register_user(user: UserRegister):
-    """User registration with validation"""
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Check if email already exists
     cur.execute("SELECT id FROM users WHERE email = %s;", (user.email,))
     if cur.fetchone():
         raise HTTPException(status_code=400, detail="Email is already registered")
@@ -78,7 +76,6 @@ def register_user(user: UserRegister):
 
 @router.post("/login")
 def login_user(user: UserLogin):
-    """User login with validation"""
     conn = get_db_connection()
     cur = conn.cursor()
     
@@ -94,7 +91,6 @@ def login_user(user: UserLogin):
     return {"message": "Login successful", "token": create_token(user_data["id"])}
 
 def authenticate_user(username: str, password: str):
-    """Authenticate user during token login"""
     conn = get_db_connection()
     cur = conn.cursor()
     
@@ -110,7 +106,6 @@ def authenticate_user(username: str, password: str):
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    """OAuth2 login token generation"""
     user = authenticate_user(form_data.username, form_data.password)
     
     if not user:
