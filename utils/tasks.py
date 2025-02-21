@@ -41,7 +41,7 @@ async def scrape_and_store(urls, user_id, task_id):
 async def scrape_metadata(url):
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=30) as response:
+            async with session.get(url, timeout=40) as response: # type: ignore
                 if response.status != 200:
                     return {
                         "url": url,
