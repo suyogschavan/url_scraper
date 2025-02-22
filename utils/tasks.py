@@ -10,14 +10,22 @@ from utils.celery_worker import celery_app
 import asyncio
 import aiohttp
 import logging
+from prometheus_client import start_http_server, Counter, Histogram
 
 load_dotenv()
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+start_http_server(8001)
+
+tasks_processed = Counter('celery_tasks_processed', 'Total number of tasks processed')
+task_duration = Histogram('celery_task_duration_seconds', 'Duration of Celery tasks in seconds')
+
 @celery_app.task(bind=True)
+@task_duration.time()  
 def scrape_urls(self, urls, user_id):
+    tasks_processed.inc()
     logger.info(f"Starting scrape_urls task for user_id: {user_id}")
     total_urls = len(urls)
     asyncio.run(scrape_and_store(self, urls, user_id, self.request.id, total_urls))
