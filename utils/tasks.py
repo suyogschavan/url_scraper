@@ -87,7 +87,7 @@ async def scrape_metadata(url):
                     "keywords": keywords["content"] if keywords else "No Keywords"
                 }
 
-    except Exception as e:
+    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
         logger.warning(f"Failed to scrape {url}: {str(e)}")
         return {
             "url": url,
@@ -95,6 +95,7 @@ async def scrape_metadata(url):
             "description": "No Description",
             "keywords": "No Keywords"
         }
+
 
 from celery import shared_task
 
