@@ -68,11 +68,11 @@ async def scrape_and_store(self, urls, user_id, task_id, total_urls):
 
 async def scrape_metadata(url):
     try:
-        timeout = aiohttp.ClientTimeout(total=30)  
+        timeout = aiohttp.ClientTimeout(total=35)  
         connector = aiohttp.TCPConnector(limit_per_host=10)  
 
         async with aiohttp.ClientSession(connector=connector, timeout=timeout, raise_for_status=True) as session:
-            async with session.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30) as response:
+            async with session.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=timeout) as response:
                 
                 text = await response.text()
                 soup = BeautifulSoup(text, "html.parser")
