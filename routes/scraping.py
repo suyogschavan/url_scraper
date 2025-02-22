@@ -27,6 +27,11 @@ async def upload_csv(file: UploadFile = File(...), token: str = Depends(oauth2_s
         logger.warning("Uploaded file is not a CSV")
         raise HTTPException(status_code=400, detail="Uploaded file must be a CSV")
 
+    max_file_size = 10 * 1024 * 1024  # 10MB
+    if file.size and file.size > max_file_size:
+        logger.warning("File size exceeds limit")
+        raise HTTPException(status_code=400, detail="File size must be less than 10MB")
+
     contents = await file.read()
     df = pd.read_csv(io.StringIO(contents.decode("utf-8")))
     df.columns = [col.lower() for col in df.columns]
@@ -44,10 +49,10 @@ async def upload_csv(file: UploadFile = File(...), token: str = Depends(oauth2_s
         task = celery_app.send_task('utils.tasks.scrape_urls', args=[urls, user_data["user_id"]])
 
         logger.info(f"Created task with ID: {task.id}")
-        return {"task_id": task.id}  
+        return {"task_id": task.id}
     except Exception as e:
         logger.error(f"Error: {str(e)}")
-        return {"Error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/task-status/{task_id}")
@@ -56,12 +61,23 @@ def get_task_status(task_id: str):
     if task.state == 'PENDING':
         response = {
             'state': task.state,
-            'status': 'Pending...'
+            'status': 'Pending...',
+            'progress': '0%',
+            'urls_processed': 0,
+            'total_urls': 0
+        }
+    elif task.state == 'PROGRESS':
+        response = {
+            'state': task.state,
+            'status': task.info.get('status', 'In Progress'),
+            'progress': f"{task.info.get('progress', 0)}%",
+            'urls_processed': task.info.get('urls_processed', 0),
+            'total_urls': task.info.get('total_urls', 0)
         }
     elif task.state != 'FAILURE':
         response = {
             'state': task.state,
-            'result': task.result
+            'total_urls_processed': task.info.get('urls_processed', 0)
         }
     else:
         response = {

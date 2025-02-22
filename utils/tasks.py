@@ -15,17 +15,45 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
 @celery_app.task(bind=True)
 def scrape_urls(self, urls, user_id):
     logger.info(f"Starting scrape_urls task for user_id: {user_id}")
-    asyncio.run(scrape_and_store(urls, user_id, self.request.id))
+    total_urls = len(urls)
+    asyncio.run(scrape_and_store(self, urls, user_id, self.request.id, total_urls))
 
-async def scrape_and_store(urls, user_id, task_id):
+async def scrape_and_store(self, urls, user_id, task_id, total_urls):
     conn = get_db_connection()
     cur = conn.cursor()
     tasks = [scrape_metadata(url) for url in urls]
-    results = await asyncio.gather(*tasks)
+    results = []
 
+    for i, task in enumerate(asyncio.as_completed(tasks)):
+        metadata = await task
+        
+        results.append(metadata)
+        progress = (i + 1) / total_urls * 100
+
+        self.update_state(
+            state='PROGRESS',
+            meta={
+                'status': 'Scraping...',
+                'progress': round(progress, 2),
+                'urls_processed': i + 1,
+                'total_urls': total_urls
+            }
+        )
+    logger.info(f"Completed the url scraping part now pushing it to db")
+
+    self.update_state(
+        state='PROGRESS',
+        meta={
+            'status': 'Pushing to DB...',
+            'progress': 100,
+            'urls_processed': total_urls,
+            'total_urls': total_urls
+        }
+    )
     for metadata in results:
         if metadata:
             cur.execute(
@@ -40,16 +68,12 @@ async def scrape_and_store(urls, user_id, task_id):
 
 async def scrape_metadata(url):
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=35) as response: # type: ignore
-                if response.status != 200:
-                    return {
-                        "url": url,
-                        "title": "No Title",
-                        "description": "No Description",
-                        "keywords": "No Keywords"
-                    }
+        timeout = aiohttp.ClientTimeout(total=20)  
+        connector = aiohttp.TCPConnector(limit_per_host=10)  
 
+        async with aiohttp.ClientSession(connector=connector, timeout=timeout, raise_for_status=True) as session:
+            async with session.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=20) as response:
+                
                 text = await response.text()
                 soup = BeautifulSoup(text, "html.parser")
                 title = soup.title.string if soup.title else "No Title"
@@ -62,7 +86,9 @@ async def scrape_metadata(url):
                     "description": description["content"] if description else "No Description",
                     "keywords": keywords["content"] if keywords else "No Keywords"
                 }
+
     except Exception as e:
+        logger.warning(f"Failed to scrape {url}: {str(e)}")
         return {
             "url": url,
             "title": "No Title",
