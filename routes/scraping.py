@@ -77,7 +77,7 @@ def get_task_status(task_id: str):
     elif task.state != 'FAILURE':
         response = {
             'state': task.state,
-            'total_urls_processed': task.info.get('urls_processed', 0)
+            'result': task.result
         }
     else:
         response = {
